@@ -36,22 +36,23 @@ jobs:
             if ./.circleci/check_npm_version.sh; then
                 npm run dist
             fi
+
 workflows:
   version: 2
-  test:
+  test-publish:
     jobs:
       - test
       - publishDryRun:
-        requires:
-          - build
-        filters:
-          branches:
-            ignore:
-              - master
-    - publish:
-        requires:
-          - build
-        filters:
-          branches:
-            only:
-              - master
+          requires:
+            - test
+          filters:
+            branches:
+              ignore:
+                - master
+      - publish:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
