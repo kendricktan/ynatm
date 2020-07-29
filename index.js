@@ -63,7 +63,7 @@ const validateTransaction = (tx) => {
   return tx;
 };
 
-const yatm = (providerUrl) => {
+const ynatm = (providerUrl) => {
   // Remote Provider
   const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
@@ -165,7 +165,7 @@ const yatm = (providerUrl) => {
 };
 
 // Default export and named exports
-const myModule = yatm;
+const myModule = ynatm;
 myModule.EXPONENTIAL = EXPONENTIAL;
 myModule.LINEAR = LINEAR;
 myModule.toGwei = toGwei;

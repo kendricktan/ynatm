@@ -1,9 +1,9 @@
 {
-  "name": "yatm",
+  "name": "ynatm",
   "version": "0.0.1",
   "description": "Yet Another Transaction Manager (For Ethereum)",
   "main": "index.js",
-  "repository": "git@github.com:kendricktan/yatm.git",
+  "repository": "git@github.com:kendricktan/ynatm.git",
   "author": "Kendrick Tan <kendricktan0814@gmail.com>",
   "license": "MIT",
   "scripts": {

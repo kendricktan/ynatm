@@ -1,4 +1,4 @@
-# Yet Another Transaction Manager
+# You Need A Transaction Manager (YNATM)
 
 **(For Ethereum)**
 
@@ -8,11 +8,34 @@ This small module helps you guarantee that your transaction gets mined within a 
 
 ## Examples
 
+### Quickstart
+
+```bash
+npm install ynatm
+```
+
+```javascript
+const ynatm = require("ynatm");
+
+const tx = await ynatm(PROVIDER_URL).send({
+  transaction: {
+    from: SENDER_ADDRESS,
+    to: CONTRACT_ADDRESS,
+    data: IContract.encodeFunctionData("functionName", [params]),
+  },
+  sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
+  minGasPrice: ynatm.toGwei(1),
+  maxGasPrice: ynatm.toGwei(20),
+  gasPriceScalingFunction: ynatm.LINEAR(5), // Scales by 5 GWEI in gasPrice between each try
+  delay: 15000, // Waits 15 second between each try
+});
+```
+
 ### Ethers
 
 ```javascript
 const ethers = require("ethers");
-const yatm = require("yatm");
+const ynatm = require("ynatm");
 
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -23,20 +46,20 @@ const myERC20Token = new ethers.Contract(
   wallet
 )(async function () {
   // Min and Max GasPrice
-  const minGasPrice = yatm.toGwei(30);
-  const maxGasPrice = yatm.toGwei(100);
+  const minGasPrice = ynatm.toGwei(30);
+  const maxGasPrice = ynatm.toGwei(100);
 
   // Increments by 2.5 GWEI between each try
-  const gasPriceScalingFunction = yatm.LINEAR(2.5);
+  const gasPriceScalingFunction = ynatm.LINEAR(2.5);
 
   /*
   // If you don't want to be in GWEI, you can specify it like so
   // Just make sure that the supplied slope is big enough that you
   // Don't end up with 1000 steps till it hits the maxGasPrice
-  const gasPriceScalingFunction = yatm.LINEAR(2.5, false)
+  const gasPriceScalingFunction = ynatm.LINEAR(2.5, false)
 
   // You can also specify alternative scaling functions, e.g.
-  const gasPriceScalingFunction = yatm.EXPONENTIAL(2)
+  const gasPriceScalingFunction = ynatm.EXPONENTIAL(2)
   */
 
   // Encode transaction data
@@ -57,7 +80,7 @@ const myERC20Token = new ethers.Contract(
 
   // Remote Provider URL can be any JSON-RPC URL
   // e.g. Infura, localhost:8545, etc
-  const tx = await yatm(PROVIDER_URL).send({
+  const tx = await ynatm(PROVIDER_URL).send({
     transaction,
     sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
     minGasPrice,
@@ -72,27 +95,27 @@ const myERC20Token = new ethers.Contract(
 
 ```javascript
 const Web3 = require("web3");
-const yatm = require("yatm");
+const ynatm = require("ynatm");
 
 const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 2 });
 
 const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI)(
   async function () {
     // Min and Max GasPrice
-    const minGasPrice = yatm.toGwei(30);
-    const maxGasPrice = yatm.toGwei(100);
+    const minGasPrice = ynatm.toGwei(30);
+    const maxGasPrice = ynatm.toGwei(100);
 
     // Increments by 2.5 GWEI between each try
-    const gasPriceScalingFunction = yatm.LINEAR(2.5);
+    const gasPriceScalingFunction = ynatm.LINEAR(2.5);
 
     /*
     // If you don't want to be in GWEI, you can specify it like so
     // Just make sure that the supplied slope is big enough that you
     // Don't end up with 1000 steps till it hits the maxGasPrice
-    const gasPriceScalingFunction = yatm.LINEAR(2.5, false)
+    const gasPriceScalingFunction = ynatm.LINEAR(2.5, false)
 
     // You can also specify alternative scaling functions, e.g.
-    const gasPriceScalingFunction = yatm.EXPONENTIAL(2)
+    const gasPriceScalingFunction = ynatm.EXPONENTIAL(2)
     */
 
     // Encode transaction data
@@ -112,7 +135,7 @@ const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI)(
 
     // Remote Provider URL can be any JSON-RPC URL
     // e.g. Infura, localhost:8545, etc
-    const tx = await yatm(PROVIDER_URL).send({
+    const tx = await ynatm(PROVIDER_URL).send({
       transaction,
       sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
       minGasPrice,

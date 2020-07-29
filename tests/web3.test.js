@@ -1,4 +1,4 @@
-const yatm = require("..");
+const ynatm = require("..");
 const Web3 = require("web3");
 const { BigNumber } = require("ethers");
 
@@ -26,7 +26,7 @@ beforeAll(async function () {
 
 test("simple override", async function () {
   const nonce = await web3.eth.getTransactionCount(signerAddress);
-  const initialGasPrice = yatm.toGwei(1);
+  const initialGasPrice = ynatm.toGwei(1);
 
   const transaction = {
     from: signerAddress,
@@ -41,13 +41,13 @@ test("simple override", async function () {
   web3.eth.sendTransaction(transaction).catch(() => {});
 
   // Send a bunch of transactions to override and overprice previous tx
-  const { transactionHash } = await yatm(PROVIDER_URL).send({
+  const { transactionHash } = await ynatm(PROVIDER_URL).send({
     transaction,
     sendTransactionFunction: (tx) =>
       web3.eth.sendTransaction(tx, (err) => new Error(err)),
-    minGasPrice: initialGasPrice + yatm.toGwei(1),
-    maxGasPrice: yatm.toGwei(50),
-    gasPriceScalingFunction: yatm.LINEAR(1),
+    minGasPrice: initialGasPrice + ynatm.toGwei(1),
+    maxGasPrice: ynatm.toGwei(50),
+    gasPriceScalingFunction: ynatm.LINEAR(1),
     delay: 1000,
   });
   const { gasPrice } = await web3.eth.getTransaction(transactionHash);
@@ -58,7 +58,7 @@ test("simple override", async function () {
 test("contract data override", async function () {
   const nonce = await web3.eth.getTransactionCount(signerAddress);
 
-  const initialGasPrice = yatm.toGwei(1);
+  const initialGasPrice = ynatm.toGwei(1);
   const initialState = web3.utils.toWei("10");
   const initialData = StateMachine.methods.setState(initialState).encodeABI();
 
@@ -77,12 +77,12 @@ test("contract data override", async function () {
   // Ignore if transaction fails
   web3.eth.sendTransaction(initialTransaction).catch(() => {});
 
-  await yatm(PROVIDER_URL).send({
+  await ynatm(PROVIDER_URL).send({
     transaction: { ...initialTransaction, data: overrideData },
     sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
-    minGasPrice: initialGasPrice + yatm.toGwei(1),
-    maxGasPrice: yatm.toGwei(50),
-    gasPriceScalingFunction: yatm.LINEAR(1),
+    minGasPrice: initialGasPrice + ynatm.toGwei(1),
+    maxGasPrice: ynatm.toGwei(50),
+    gasPriceScalingFunction: ynatm.LINEAR(1),
     delay: 1000,
   });
 
