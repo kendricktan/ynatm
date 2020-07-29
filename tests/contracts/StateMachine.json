@@ -1,0 +1,42 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_state",
+          "type": "uint256"
+        }
+      ],
+      "name": "setState",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "state",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "60806040526000805534801561001457600080fd5b5060e1806100236000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063a9e966b7146037578063c19d93fb146076575b600080fd5b606060048036036020811015604b57600080fd5b81019080803590602001909291905050506092565b6040518082815260200191505060405180910390f35b607c60a5565b6040518082815260200191505060405180910390f35b6000816000819055506000549050919050565b6000548156fea2646970667358221220757673c1d5f467e16d5ed6b417d980eb1bb164ed63c156aa8aa5a3c6d883484f64736f6c63430006060033"
+}

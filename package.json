@@ -1,0 +1,44 @@
+{
+  "name": "yatm",
+  "version": "0.0.1",
+  "description": "Yet Another Transaction Manager (For Ethereum)",
+  "main": "index.js",
+  "repository": "git@github.com:kendricktan/yatm.git",
+  "author": "Kendrick Tan <kendricktan0814@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest tests --forceExit"
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "ethers": "^5.0.7"
+  },
+  "devDependencies": {
+    "eslint": "^7.5.0",
+    "eslint-plugin-jest": "^23.19.0",
+    "jest": "^26.1.0",
+    "jest-serial-runner": "^1.1.0",
+    "web3": "^1.2.11"
+  },
+  "eslintConfig": {
+    "plugins": [
+      "jest"
+    ],
+    "extends": [
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2018
+    },
+    "env": {
+      "es6": true,
+      "node": true,
+      "jest/globals": true
+    }
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 120000,
+    "runner": "jest-serial-runner"
+  }
+}
