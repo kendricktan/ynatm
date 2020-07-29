@@ -1,5 +1,8 @@
 # You Need A Transaction Manager (YNATM)
 
+[![circleci](https://badgen.net/circleci/github/kendricktan/ynatm)](https://app.circleci.com/pipelines/github/kendricktan/ynatm)
+[![npm](https://badgen.net/npm/v/ynatm)](https://www.npmjs.com/package/ynatm)
+
 **(For Ethereum)**
 
 With the recent spike in gas prices, you can't just send a 1 GWEI gas price for your Ethereum tx and hope that it will get mined.
@@ -160,5 +163,9 @@ yarn test
 If you don't have `geth` installed locally, you can also use `docker`
 
 ```bash
+# Terminal 1
 docker run -p 127.0.0.1:8545:8545/tcp --entrypoint /bin/sh ethereum/client-go -c "yes '' | geth --dev --dev.period 15 --http --http.addr '0.0.0.0' --http.port 8545 --http.api 'eth,net,web3,account,admin,personal' --unlock '0' --allow-insecure-unlock"
+
+# Terminal 2
+yarn test
 ```
