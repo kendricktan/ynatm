@@ -102,16 +102,17 @@ const ynatm = require("ynatm");
 
 const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 2 });
 
-const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI)(
-  async function () {
-    // Min and Max GasPrice
-    const minGasPrice = ynatm.toGwei(30);
-    const maxGasPrice = ynatm.toGwei(100);
+const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI);
 
-    // Increments by 2.5 GWEI between each try
-    const gasPriceScalingFunction = ynatm.LINEAR(2.5);
+(async function () {
+  // Min and Max GasPrice
+  const minGasPrice = ynatm.toGwei(30);
+  const maxGasPrice = ynatm.toGwei(100);
 
-    /*
+  // Increments by 2.5 GWEI between each try
+  const gasPriceScalingFunction = ynatm.LINEAR(2.5);
+
+  /*
     // If you don't want to be in GWEI, you can specify it like so
     // Just make sure that the supplied slope is big enough that you
     // Don't end up with 1000 steps till it hits the maxGasPrice
@@ -121,33 +122,32 @@ const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI)(
     const gasPriceScalingFunction = ynatm.EXPONENTIAL(2)
     */
 
-    // Encode transaction data
-    // If you just want to send ETH, data can be '0x'
-    // e.g. const data = '0x'
-    const data = StateMachine.methods
-      .transfer(RECIPIENT_ADDRESS, AMOUNT_IN_WEI)
-      .encodeABI();
+  // Encode transaction data
+  // If you just want to send ETH, data can be '0x'
+  // e.g. const data = '0x'
+  const data = myERC20Token.methods
+    .transfer(RECIPIENT_ADDRESS, AMOUNT_IN_WEI)
+    .encodeABI();
 
-    // Transaction object
-    // Make sure you specify the "to" address as the contract address
-    const transaction = {
-      from: wallet.address,
-      to: CONTRACT_ADDRESS,
-      data,
-    };
+  // Transaction object
+  // Make sure you specify the "to" address as the contract address
+  const transaction = {
+    from: wallet.address,
+    to: CONTRACT_ADDRESS,
+    data,
+  };
 
-    // Remote Provider URL can be any JSON-RPC URL
-    // e.g. Infura, localhost:8545, etc
-    const tx = await ynatm(PROVIDER_URL).send({
-      transaction,
-      sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
-      minGasPrice,
-      maxGasPrice,
-      gasPriceScalingFunction,
-      delay: 10000, // Delay between each retry. In ms.
-    });
-  }
-)();
+  // Remote Provider URL can be any JSON-RPC URL
+  // e.g. Infura, localhost:8545, etc
+  const tx = await ynatm(PROVIDER_URL).send({
+    transaction,
+    sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
+    minGasPrice,
+    maxGasPrice,
+    gasPriceScalingFunction,
+    delay: 10000, // Delay between each retry. In ms.
+  });
+})();
 ```
 
 ## Testing
