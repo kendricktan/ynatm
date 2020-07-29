@@ -151,8 +151,14 @@ const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI)(
 
 ```bash
 # Terminal 1
-yes '' | geth --dev --dev.period 15 --http --http.addr "0.0.0.0" --http.port 8545 --http.api "eth,net,web3,account,admin,personal" --unlock "0" --allow-insecure-unlock
+yes '' | geth --dev --dev.period 15 --http --http.addr '0.0.0.0' --http.port 8545 --http.api 'eth,net,web3,account,admin,personal' --unlock '0' --allow-insecure-unlock
 
 # Terminal 2
 yarn test
+```
+
+If you don't have `geth` installed locally, you can also use `docker`
+
+```bash
+docker run -p 127.0.0.1:8545:8545/tcp --entrypoint /bin/sh ethereum/client-go -c "yes '' | geth --dev --dev.period 15 --http --http.addr '0.0.0.0' --http.port 8545 --http.api 'eth,net,web3,account,admin,personal' --unlock '0' --allow-insecure-unlock"
 ```
