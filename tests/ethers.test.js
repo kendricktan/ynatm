@@ -40,7 +40,8 @@ test("getTransactionNonceFunction", async function () {
   const tx = await ynatm.send({
     transaction,
     sendTransactionFunction: (tx) => signer.sendTransaction(tx),
-    getTransactionNonceFunction: () => provider.getTransactionCount(signerAddress),
+    getTransactionNonceFunction: () =>
+      provider.getTransactionCount(signerAddress),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
@@ -139,6 +140,8 @@ test(`does not retry on revert`, async function () {
     ynatm.send({
       transaction,
       sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+      getTransactionNonceFunction: () =>
+        provider.getTransactionCount(signerAddress),
       minGasPrice: ynatm.toGwei(1),
       maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),
