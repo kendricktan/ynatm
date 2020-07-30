@@ -54,28 +54,6 @@ const getGasPriceVariations = ({
   return gasPrices;
 };
 
-// Validates the "transaction" object
-const validateTransaction = (tx) => {
-  let hasError = false;
-  let errors = {};
-
-  if (!tx.from) {
-    errors.from = "Missing `from` address";
-    hasError = true;
-  }
-
-  if (!tx.to) {
-    errors.to = "Missing `to` address";
-    hasError = true;
-  }
-
-  if (hasError) {
-    throw new Error(`Invalid transaction object: ${JSON.stringify(errors)}`);
-  }
-
-  return tx;
-};
-
 // Immediately rejects the promise if it contains the "revert" keyword
 const rejectOnRevert = (e) => {
   return e.toString().toLowerCase().includes("revert");
@@ -128,9 +106,6 @@ const send = async ({
     maxGasPrice = parseInt(maxGasPrice);
   }
 
-  // Validated transaction
-  const validatedTx = validateTransaction(transaction);
-
   // Get nonce
   let nonce = transaction.nonce;
   if (nonce === undefined || nonce === null) {
@@ -152,7 +127,7 @@ const send = async ({
 
   const txs = gasPrices.map((gasPrice) => {
     return {
-      ...validatedTx,
+      ...transaction,
       nonce,
       gasPrice,
     };

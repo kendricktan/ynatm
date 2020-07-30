@@ -60,26 +60,26 @@ test("contract data override", async function () {
 
   const initialGasPrice = ynatm.toGwei(1);
   const initialState = web3.utils.toWei("10");
-  const initialData = StateMachine.methods.setState(initialState).encodeABI();
 
   const overrideState = web3.utils.toWei("100");
-  const overrideData = StateMachine.methods.setState(overrideState).encodeABI();
 
-  const initialTransaction = {
+  const options = {
     from: signerAddress,
-    to: StateMachine.options.address,
-    data: initialData,
     nonce,
     gas: 100000,
     gasPrice: initialGasPrice,
   };
 
   // Ignore if transaction fails
-  web3.eth.sendTransaction(initialTransaction).catch(() => {});
+  StateMachine.methods
+    .setState(initialState)
+    .send(options)
+    .catch(() => {});
 
   await ynatm.send({
-    transaction: { ...initialTransaction, data: overrideData },
-    sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
+    transaction: options,
+    sendTransactionFunction: (txOptions) =>
+      StateMachine.methods.setState(overrideState).send(txOptions),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
