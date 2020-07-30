@@ -52,7 +52,7 @@ test("simple override", async function () {
   });
   const { transactionHash } = await tx.wait();
 
-  await provider.waitForTransaction(transactionHash, 2, 120000);
+  await provider.waitForTransaction(transactionHash, 3, 120000);
 
   const { gasPrice } = await provider.getTransaction(transactionHash);
 
@@ -96,7 +96,7 @@ test("contract data override", async function () {
   });
   const { transactionHash } = await tx.wait();
 
-  await provider.waitForTransaction(transactionHash, 2, 120000);
+  await provider.waitForTransaction(transactionHash, 3, 120000);
 
   const finalState = await StateMachine.state();
   expectEqBN(finalState, overrideState);
