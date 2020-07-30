@@ -118,10 +118,10 @@ test(`does not retry on revert`, async function () {
       minGasPrice: ynatm.toGwei(1),
       maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),
-      delay: 100000,
+      delay: 120000,
     })
   ).rejects.toThrow("revert");
-}, 15000);
+});
 
 test(`throws on all errors`, async function () {
   // Make sure this isn't the first tx as its using nonce of 0
@@ -140,8 +140,8 @@ test(`throws on all errors`, async function () {
       minGasPrice: ynatm.toGwei(1),
       maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),
-      delay: 100000,
+      delay: 120000,
       rejectImmediatelyOnCondition: () => true,
     })
   ).rejects.toThrow("nonce");
-}, 15000);
+});
