@@ -20,13 +20,15 @@ npm install ynatm
 ```javascript
 const ynatm = require("ynatm");
 
-const tx = await ynatm(PROVIDER_URL).send({
+const tx = await ynatm.send({
   transaction: {
     from: SENDER_ADDRESS,
     to: CONTRACT_ADDRESS,
     data: IContract.encodeFunctionData("functionName", [params]),
   },
   sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
+  getTransactionNonceFunction: () =>
+    provider.getTransactionCount(SENDER_ADDRESS),
   minGasPrice: ynatm.toGwei(1),
   maxGasPrice: ynatm.toGwei(20),
   gasPriceScalingFunction: ynatm.LINEAR(5), // Scales by 5 GWEI in gasPrice between each try
@@ -63,11 +65,14 @@ const rejectOnTheseMessages = (err) => {
   return false;
 };
 
-const tx = await ynatm(PROVIDER_URL).send({
+const nonce = await provider.getTransactionCount(SENDER_ADDRESS)
+
+const tx = await ynatm.send({
   transaction: {
     from: SENDER_ADDRESS,
     to: CONTRACT_ADDRESS,
     data: IContract.encodeFunctionData("functionName", [params]),
+    nonce // If nonce is supplied here, we don't need to provide it via `getTransactionNonceFunction`
   },
   sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
   minGasPrice: ynatm.toGwei(1),
@@ -96,6 +101,9 @@ const myERC20Token = new ethers.Contract(
   const minGasPrice = ynatm.toGwei(30);
   const maxGasPrice = ynatm.toGwei(100);
 
+  // Nonce
+  const nonce = await provider.getTransactionCount(SENDER_ADDRESS)
+
   // Increments by 2.5 GWEI between each try
   const gasPriceScalingFunction = ynatm.LINEAR(2.5);
 
@@ -122,12 +130,13 @@ const myERC20Token = new ethers.Contract(
   const transaction = {
     from: wallet.address,
     to: CONTRACT_ADDRESS,
+    nonce,
     data,
   };
 
   // Remote Provider URL can be any JSON-RPC URL
   // e.g. Infura, localhost:8545, etc
-  const tx = await ynatm(PROVIDER_URL).send({
+  const tx = await ynatm.send({
     transaction,
     sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
     minGasPrice,
@@ -152,6 +161,9 @@ const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI);
   // Min and Max GasPrice
   const minGasPrice = ynatm.toGwei(30);
   const maxGasPrice = ynatm.toGwei(100);
+  
+  // Nonce
+  const nonce = await web3.eth.getTransactionCount(SENDER_ADDRESS);
 
   // Increments by 2.5 GWEI between each try
   const gasPriceScalingFunction = ynatm.LINEAR(2.5);
@@ -176,14 +188,15 @@ const myERC20Token = new web3.eth.Contract(CONTRACT_ADDRESS, CONTRACT_ABI);
   // Transaction object
   // Make sure you specify the "to" address as the contract address
   const transaction = {
-    from: wallet.address,
+    from: SENDER_ADDRESS,
     to: CONTRACT_ADDRESS,
     data,
+    nonce
   };
 
   // Remote Provider URL can be any JSON-RPC URL
   // e.g. Infura, localhost:8545, etc
-  const tx = await ynatm(PROVIDER_URL).send({
+  const tx = await ynatm.send({
     transaction,
     sendTransactionFunction: (tx) => web3.eth.sendTransaction(tx),
     minGasPrice,

@@ -25,6 +25,30 @@ beforeAll(async function () {
   IStateMachine = StateMachine.interface;
 });
 
+test("getTransactionNonceFunction", async function () {
+  const initialGasPrice = ynatm.toGwei(1);
+
+  const transaction = {
+    from: signerAddress,
+    to: signerAddress,
+    data: "0x",
+    gasLimit: 21000,
+    gasPrice: initialGasPrice,
+  };
+
+  // Shouldn't throw an error
+  const tx = await ynatm.send({
+    transaction,
+    sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+    getTransactionNonceFunction: () => provider.getTransactionCount(signerAddress),
+    minGasPrice: initialGasPrice + ynatm.toGwei(1),
+    maxGasPrice: ynatm.toGwei(50),
+    gasPriceScalingFunction: ynatm.LINEAR(1),
+    delay: 1000,
+  });
+  await tx.wait();
+});
+
 test("simple override", async function () {
   const nonce = await provider.getTransactionCount(signerAddress);
   const initialGasPrice = ynatm.toGwei(1);
@@ -42,7 +66,7 @@ test("simple override", async function () {
   signer.sendTransaction(transaction).catch(() => {});
 
   // Send a bunch of transactions to override and overprice previous tx
-  const tx = await ynatm(PROVIDER_URL).send({
+  const tx = await ynatm.send({
     transaction,
     sendTransactionFunction: (tx) => signer.sendTransaction(tx),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
@@ -52,7 +76,7 @@ test("simple override", async function () {
   });
   const { transactionHash } = await tx.wait();
 
-  await provider.waitForTransaction(transactionHash, 3, 120000);
+  await provider.waitForTransaction(transactionHash, 1, 120000);
 
   const { gasPrice } = await provider.getTransaction(transactionHash);
 
@@ -86,7 +110,7 @@ test("contract data override", async function () {
   // Ignore if transaction fails
   signer.sendTransaction(initialTransaction).catch(() => {});
 
-  const tx = await ynatm(PROVIDER_URL).send({
+  const tx = await ynatm.send({
     transaction: { ...initialTransaction, data: overrideData },
     sendTransactionFunction: (tx) => signer.sendTransaction(tx),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
@@ -112,7 +136,7 @@ test(`does not retry on revert`, async function () {
   };
 
   expect(
-    ynatm(PROVIDER_URL).send({
+    ynatm.send({
       transaction,
       sendTransactionFunction: (tx) => signer.sendTransaction(tx),
       minGasPrice: ynatm.toGwei(1),
@@ -134,7 +158,7 @@ test(`throws on all errors`, async function () {
   };
 
   expect(
-    ynatm(PROVIDER_URL).send({
+    ynatm.send({
       transaction,
       sendTransactionFunction: (tx) => signer.sendTransaction(tx),
       minGasPrice: ynatm.toGwei(1),
