@@ -38,7 +38,7 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 30000,
+    "testTimeout": 120000,
     "runner": "jest-serial-runner"
   }
 }
