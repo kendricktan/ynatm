@@ -101,3 +101,28 @@ test("contract data override", async function () {
   const finalState = await StateMachine.state();
   expectEqBN(finalState, overrideState);
 });
+
+test(`does not retry on revert`, async () => {
+  const nonce = await provider.getTransactionCount(signerAddress);
+
+  const transaction = {
+    from: signerAddress,
+    to: ethers.constants.AddressZero,
+    data: "0x1111111111111111",
+    value: ethers.utils.parseEther("1"),
+    gasLimit: 21000,
+    nonce,
+  };
+
+  // Expect some error throw within 15 seconds
+  expect(
+    ynatm(PROVIDER_URL).send({
+      transaction,
+      sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+      minGasPrice: ynatm.toGwei(1),
+      maxGasPrice: ynatm.toGwei(5),
+      gasPriceScalingFunction: ynatm.LINEAR(1),
+      delay: 10000,
+    })
+  ).rejects.toThrow("revert");
+}, 15000);

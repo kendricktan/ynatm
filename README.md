@@ -34,6 +34,37 @@ const tx = await ynatm(PROVIDER_URL).send({
 });
 ```
 
+### Error Handling with `rejectImmediatelyOnCondition`
+
+The expected behavior when the transaction manager hits an error is to:
+1. Check if the error meets the condition specified in `rejectImmediatelyOnCondition` (Defaults to checking for reverts)
+    - If the condition is met, all future transactions are cancelled the the promise is rejected
+2. Checks to see if all the transactions have failed
+    - If all transactions have failed, reject the last error
+3. Keep trying
+
+You can override the `rejectImmediatelyOnCondition` like so:
+
+```javascript
+const ynatm = require("ynatm");
+
+const rejectOnAll = () => true
+
+const tx = await ynatm(PROVIDER_URL).send({
+  transaction: {
+    from: SENDER_ADDRESS,
+    to: CONTRACT_ADDRESS,
+    data: IContract.encodeFunctionData("functionName", [params]),
+  },
+  sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
+  minGasPrice: ynatm.toGwei(1),
+  maxGasPrice: ynatm.toGwei(20),
+  gasPriceScalingFunction: ynatm.LINEAR(5),
+  delay: 15000,
+  rejectImmediatelyOnCondition: rejectOnAll
+});
+```
+
 ### Ethers
 
 ```javascript

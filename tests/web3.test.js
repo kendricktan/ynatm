@@ -33,7 +33,7 @@ test("simple override", async function () {
     to: signerAddress,
     data: "0x",
     nonce,
-    gasLimit: 21000,
+    gas: 21000,
     gasPrice: initialGasPrice,
   };
 
@@ -70,7 +70,7 @@ test("contract data override", async function () {
     to: StateMachine.options.address,
     data: initialData,
     nonce,
-    gasLimit: 100000,
+    gas: 100000,
     gasPrice: initialGasPrice,
   };
 
