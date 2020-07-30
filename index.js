@@ -32,6 +32,20 @@ const getGasPriceVariations = ({
   let i = 0;
   let curGasPrice = minGasPrice;
   let gasPrices = [];
+
+  // Warning for the user on their gasPrice if their first
+  // Increment is < 1e-6 (because of the GWEI conversion)
+  const firstGasPriceDelta =
+    gasPriceScalingFunction(minGasPrice, 1) - minGasPrice;
+  if (firstGasPriceDelta / minGasPrice < 1e-6) {
+    console.log(
+      `WARNING: GasPrice is scaling very slowly. Might take a while.
+                Double check the supplied gasPriceScalingFunction.
+                If you're using a custom function, make sure to use toGwei.
+      `
+    );
+  }
+
   for (;;) {
     if (curGasPrice > maxGasPrice) break;
     gasPrices = gasPrices.concat(curGasPrice);
@@ -63,20 +77,45 @@ const validateTransaction = (tx) => {
   return tx;
 };
 
+// Immediately rejects the promise if it contains the "revert" keyword
+const rejectOnRevert = (e) => {
+  return e.toString().toLowerCase().includes("revert");
+};
+
 const ynatm = (providerUrl) => {
   // Remote Provider
   const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-  /*
-    Gradually keeps trying a transaction with an incremental amount of gas.
-  */
+  /**
+   * Gradually keeps trying a transaction with an incremental amount of gas
+   * while keeping the same nonce.
+   *
+   * @param {Object} transaction:
+   *   Object that should be passed to your supplied sendTransactionFunction.
+   *   e.g. { from: address, to: address, gas: 21000, data: '0x' }
+   * @param {Function} sendTransactionFunction:
+   *   Function that accepts a transaction object, sends it and returns a Promise object
+   *   e.g. (tx) => wallet.sendTranscation(tx)
+   *        (tx) => web3.eth.sendTransaction(tx, {from: sender})
+   * @param {number} minGasPrice:
+   *   Minimum gasPrice to start with
+   * @param {number} masGasPrice:
+   *   Maximum allowed gasPrice
+   * @param {number} delay:
+   *   Delay before retrying transaction with a higher gasPrice (ms)
+   * @param {Function} rejectImmediatelyOnCondition:
+   *   If an error occurs and matches some condition. Throws the error immediately
+   *   and stops attempting to retry the proceeding transactions.
+   *   By default, it'll stop immediately stop if the error contains the string "revert"
+   */
   const send = async ({
     transaction,
     sendTransactionFunction,
     minGasPrice,
     maxGasPrice,
-    gasPriceScalingFunction = LINEAR(1),
+    gasPriceScalingFunction = LINEAR(5),
     delay = 60000,
+    rejectImmediatelyOnCondition = rejectOnRevert,
   }) => {
     // Make sure its an int
     minGasPrice = parseInt(minGasPrice);
@@ -125,33 +164,36 @@ const ynatm = (providerUrl) => {
 
       // For each signed transactions
       for (const [i, txData] of txs.entries()) {
-        // Attempt to send the signed transaction after <x> delay
-        const timeoutId = setTimeout(() => {
-          // Async function to wait for transaction
-          const waitForTx = async () => {
-            try {
-              const tx = await sendTransactionFunction(txData);
+        // Async function to wait for transaction
+        const waitForTx = async () => {
+          try {
+            const tx = await sendTransactionFunction(txData);
 
-              // Clear other timeouts
+            // Clear other timeouts
+            for (const tid of timeoutIds) {
+              clearTimeout(tid);
+            }
+
+            resolve(tx);
+          } catch (e) {
+            failedTxs.push(e);
+
+            // Reject if either we have retried all possible gasPrices
+            // Or if some condition is met
+            if (
+              failedTxs.length >= txs.length ||
+              rejectImmediatelyOnCondition(e)
+            ) {
               for (const tid of timeoutIds) {
                 clearTimeout(tid);
               }
-
-              resolve(tx);
-            } catch (e) {
-              failedTxs.push(e);
-
-              if (failedTxs.length >= txs.length) {
-                reject(e);
-              }
-
-              return;
+              reject(e);
             }
-          };
+          }
+        };
 
-          waitForTx();
-        }, i * delay);
-
+        // Attempt to send the signed transaction after <x> delay
+        const timeoutId = setTimeout(waitForTx, i * delay);
         timeoutIds.push(timeoutId);
       }
     });

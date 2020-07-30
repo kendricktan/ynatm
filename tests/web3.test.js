@@ -5,7 +5,7 @@ const { BigNumber } = require("ethers");
 const { abi, bytecode } = require("./contracts/StateMachine.json");
 const { expectEqBN, expectGtBN, PROVIDER_URL } = require("./common");
 
-const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 2 });
+const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 1 });
 
 let StateMachine;
 let signerAddress;
@@ -33,7 +33,7 @@ test("simple override", async function () {
     to: signerAddress,
     data: "0x",
     nonce,
-    gasLimit: 21000,
+    gas: 21000,
     gasPrice: initialGasPrice,
   };
 
@@ -70,7 +70,7 @@ test("contract data override", async function () {
     to: StateMachine.options.address,
     data: initialData,
     nonce,
-    gasLimit: 100000,
+    gas: 100000,
     gasPrice: initialGasPrice,
   };
 
