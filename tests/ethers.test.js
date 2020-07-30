@@ -9,7 +9,6 @@ const signer = provider.getSigner();
 
 let signerAddress;
 let StateMachine;
-let IStateMachine;
 
 beforeAll(async function () {
   // Gets signer address
@@ -22,7 +21,6 @@ beforeAll(async function () {
 
   // Waits for 2 confirmations
   await provider.waitForTransaction(transactionHash, 1, 120000);
-  IStateMachine = StateMachine.interface;
 });
 
 test("getTransactionNonceFunction", async function () {
@@ -90,30 +88,22 @@ test("contract data override", async function () {
 
   const initialGasPrice = ynatm.toGwei(1);
   const initialState = ethers.utils.parseEther("10");
-  const initialData = IStateMachine.encodeFunctionData("setState", [
-    initialState,
-  ]);
-
   const overrideState = ethers.utils.parseEther("100");
-  const overrideData = IStateMachine.encodeFunctionData("setState", [
-    overrideState,
-  ]);
 
-  const initialTransaction = {
+  const options = {
     from: signerAddress,
-    to: StateMachine.address,
-    data: initialData,
     nonce,
     gasLimit: 100000,
     gasPrice: initialGasPrice,
   };
 
   // Ignore if transaction fails
-  signer.sendTransaction(initialTransaction).catch(() => {});
+  StateMachine.setState(initialState, options).catch(() => {});
 
   const tx = await ynatm.send({
-    transaction: { ...initialTransaction, data: overrideData },
-    sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+    transaction: options,
+    sendTransactionFunction: (txOptions) =>
+      StateMachine.setState(overrideState, txOptions),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
