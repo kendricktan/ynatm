@@ -1,5 +1,4 @@
 const Promise = require("bluebird");
-const ethers = require("ethers");
 
 // GWEI = 1e9
 const GWEI = Math.pow(10, 9);
