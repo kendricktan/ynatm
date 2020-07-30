@@ -102,16 +102,13 @@ test("contract data override", async function () {
   expectEqBN(finalState, overrideState);
 });
 
-test(`does not retry on revert`, async () => {
-  const nonce = await provider.getTransactionCount(signerAddress);
-
+test(`does not retry on revert`, async function () {
   const transaction = {
     from: signerAddress,
     to: ethers.constants.AddressZero,
     data: "0x1111111111111111",
     value: ethers.utils.parseEther("1"),
-    gasLimit: 21000,
-    nonce,
+    gasLimit: 100000,
   };
 
   // Expect some error throw within 15 seconds
@@ -125,4 +122,4 @@ test(`does not retry on revert`, async () => {
       delay: 10000,
     })
   ).rejects.toThrow("revert");
-}, 15000);
+});
