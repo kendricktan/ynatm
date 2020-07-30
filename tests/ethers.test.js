@@ -16,12 +16,12 @@ beforeAll(async function () {
   signerAddress = await signer.getAddress();
 
   // Deploys the token contract and gets related interface
-  const tokenFactory = new ethers.ContractFactory(abi, bytecode, signer);
-  StateMachine = await tokenFactory.deploy();
+  const Factory = new ethers.ContractFactory(abi, bytecode, signer);
+  StateMachine = await Factory.deploy();
   const { transactionHash } = await StateMachine.deployTransaction.wait();
 
   // Waits for 2 confirmations
-  await provider.waitForTransaction(transactionHash, 2, 120000);
+  await provider.waitForTransaction(transactionHash, 1, 120000);
   IStateMachine = StateMachine.interface;
 });
 
@@ -96,7 +96,7 @@ test("contract data override", async function () {
   });
   const { transactionHash } = await tx.wait();
 
-  await provider.waitForTransaction(transactionHash, 3, 120000);
+  await provider.waitForTransaction(transactionHash, 1, 120000);
 
   const finalState = await StateMachine.state();
   expectEqBN(finalState, overrideState);
@@ -111,15 +111,37 @@ test(`does not retry on revert`, async function () {
     gasLimit: 100000,
   };
 
-  // Expect some error throw within 15 seconds
   expect(
     ynatm(PROVIDER_URL).send({
       transaction,
       sendTransactionFunction: (tx) => signer.sendTransaction(tx),
       minGasPrice: ynatm.toGwei(1),
-      maxGasPrice: ynatm.toGwei(5),
+      maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),
-      delay: 10000,
+      delay: 100000,
     })
   ).rejects.toThrow("revert");
-});
+}, 15000);
+
+test(`throws on all errors`, async function () {
+  // Make sure this isn't the first tx as its using nonce of 0
+  const transaction = {
+    from: signerAddress,
+    to: signerAddress,
+    nonce: 0,
+    value: ethers.utils.parseEther("1"),
+    gasLimit: 100000,
+  };
+
+  expect(
+    ynatm(PROVIDER_URL).send({
+      transaction,
+      sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+      minGasPrice: ynatm.toGwei(1),
+      maxGasPrice: ynatm.toGwei(2),
+      gasPriceScalingFunction: ynatm.LINEAR(1),
+      delay: 100000,
+      rejectImmediatelyOnCondition: () => true,
+    })
+  ).rejects.toThrow("nonce");
+}, 15000);

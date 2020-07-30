@@ -5,7 +5,7 @@ const { BigNumber } = require("ethers");
 const { abi, bytecode } = require("./contracts/StateMachine.json");
 const { expectEqBN, expectGtBN, PROVIDER_URL } = require("./common");
 
-const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 2 });
+const web3 = new Web3(PROVIDER_URL, null, { transactionConfirmationBlocks: 1 });
 
 let StateMachine;
 let signerAddress;
