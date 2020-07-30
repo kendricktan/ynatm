@@ -1,6 +1,6 @@
 {
   "name": "ynatm",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "You Need A Transaction Manager (YNATM)",
   "main": "index.js",
   "repository": "git@github.com:kendricktan/ynatm.git",
@@ -38,7 +38,7 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 120000,
+    "testTimeout": 30000,
     "runner": "jest-serial-runner"
   }
 }

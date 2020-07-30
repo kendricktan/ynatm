@@ -37,10 +37,11 @@ const tx = await ynatm(PROVIDER_URL).send({
 ### Error Handling with `rejectImmediatelyOnCondition`
 
 The expected behavior when the transaction manager hits an error is to:
+
 1. Check if the error meets the condition specified in `rejectImmediatelyOnCondition` (Defaults to checking for reverts)
-    - If the condition is met, all future transactions are cancelled the the promise is rejected
+   - If the condition is met, all future transactions are cancelled the the promise is rejected
 2. Checks to see if all the transactions have failed
-    - If all transactions have failed, reject the last error
+   - If all transactions have failed, reject the last error
 3. Keep trying
 
 You can override the `rejectImmediatelyOnCondition` like so:
@@ -48,7 +49,19 @@ You can override the `rejectImmediatelyOnCondition` like so:
 ```javascript
 const ynatm = require("ynatm");
 
-const rejectOnAll = () => true
+const rejectOnTheseMessages = (err) => {
+  const errMsg = err.toString().toLowerCase();
+
+  const conditions = ["revert", "gas", "nonce", "invalid"];
+
+  for (const i of conditions) {
+    if (errMsg.includes(i)) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 const tx = await ynatm(PROVIDER_URL).send({
   transaction: {
@@ -61,7 +74,7 @@ const tx = await ynatm(PROVIDER_URL).send({
   maxGasPrice: ynatm.toGwei(20),
   gasPriceScalingFunction: ynatm.LINEAR(5),
   delay: 15000,
-  rejectImmediatelyOnCondition: rejectOnAll
+  rejectImmediatelyOnCondition: rejectOnTheseMessages,
 });
 ```
 
@@ -195,7 +208,7 @@ If you don't have `geth` installed locally, you can also use `docker`
 
 ```bash
 # Terminal 1
-docker run -p 127.0.0.1:8545:8545/tcp --entrypoint /bin/sh ethereum/client-go -c "yes '' | geth --dev --dev.period 15 --http --http.addr '0.0.0.0' --http.port 8545 --http.api 'eth,net,web3,account,admin,personal' --unlock '0' --allow-insecure-unlock"
+docker run -p 127.0.0.1:8545:8545/tcp --entrypoint /bin/sh ethereum/client-go:v1.9.14 -c "yes '' | geth --dev --dev.period 15 --http --http.addr '0.0.0.0' --http.port 8545 --http.api 'eth,net,web3,account,admin,personal' --unlock '0' --allow-insecure-unlock"
 
 # Terminal 2
 yarn test
