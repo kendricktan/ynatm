@@ -23,31 +23,6 @@ beforeAll(async function () {
   await provider.waitForTransaction(transactionHash, 1, 120000);
 });
 
-test("getTransactionNonceFunction", async function () {
-  const initialGasPrice = ynatm.toGwei(1);
-
-  const transaction = {
-    from: signerAddress,
-    to: signerAddress,
-    data: "0x",
-    gasLimit: 21000,
-    gasPrice: initialGasPrice,
-  };
-
-  // Shouldn't throw an error
-  const tx = await ynatm.send({
-    transaction,
-    sendTransactionFunction: (tx) => signer.sendTransaction(tx),
-    getTransactionNonceFunction: () =>
-      provider.getTransactionCount(signerAddress),
-    minGasPrice: initialGasPrice + ynatm.toGwei(1),
-    maxGasPrice: ynatm.toGwei(50),
-    gasPriceScalingFunction: ynatm.LINEAR(1),
-    delay: 1000,
-  });
-  await tx.wait();
-});
-
 test("simple override", async function () {
   const nonce = await provider.getTransactionCount(signerAddress);
   const initialGasPrice = ynatm.toGwei(1);
@@ -66,8 +41,8 @@ test("simple override", async function () {
 
   // Send a bunch of transactions to override and overprice previous tx
   const tx = await ynatm.send({
-    transaction,
-    sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+    sendTransactionFunction: (gasPrice) =>
+      signer.sendTransaction({ ...transaction, gasPrice }),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
@@ -101,9 +76,8 @@ test("contract data override", async function () {
   StateMachine.setState(initialState, options).catch(() => {});
 
   const tx = await ynatm.send({
-    transaction: options,
-    sendTransactionFunction: (txOptions) =>
-      StateMachine.setState(overrideState, txOptions),
+    sendTransactionFunction: (gasPrice) =>
+      StateMachine.setState(overrideState, { ...options, gasPrice }),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
@@ -118,9 +92,11 @@ test("contract data override", async function () {
 });
 
 test(`does not retry on revert`, async function () {
+  const nonce = await provider.getTransactionCount(signerAddress);
   const transaction = {
     from: signerAddress,
     to: ethers.constants.AddressZero,
+    nonce,
     data: "0x1111111111111111",
     value: ethers.utils.parseEther("1"),
     gasLimit: 100000,
@@ -128,10 +104,8 @@ test(`does not retry on revert`, async function () {
 
   expect(
     ynatm.send({
-      transaction,
-      sendTransactionFunction: (tx) => signer.sendTransaction(tx),
-      getTransactionNonceFunction: () =>
-        provider.getTransactionCount(signerAddress),
+      sendTransactionFunction: (gasPrice) =>
+        signer.sendTransaction({ ...transaction, gasPrice }),
       minGasPrice: ynatm.toGwei(1),
       maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),
@@ -153,7 +127,8 @@ test(`throws on all errors`, async function () {
   expect(
     ynatm.send({
       transaction,
-      sendTransactionFunction: (tx) => signer.sendTransaction(tx),
+      sendTransactionFunction: (gasPrice) =>
+        signer.sendTransaction({ ...transaction, gasPrice }),
       minGasPrice: ynatm.toGwei(1),
       maxGasPrice: ynatm.toGwei(2),
       gasPriceScalingFunction: ynatm.LINEAR(1),

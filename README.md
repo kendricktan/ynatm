@@ -20,15 +20,17 @@ npm install ynatm
 ```javascript
 const ynatm = require("ynatm");
 
+const nonce = provider.getTransactionCount(SENDER_ADDRESS);
+
+const txOptions = {
+  from: SENDER_ADDRESS,
+  to: RECIPIENT_ADDRESS,
+  nonce
+}
+
 const tx = await ynatm.send({
-  transaction: {
-    from: SENDER_ADDRESS,
-    to: CONTRACT_ADDRESS,
-    data: IContract.encodeFunctionData("functionName", [params]),
-  },
-  sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
-  getTransactionNonceFunction: () =>
-    provider.getTransactionCount(SENDER_ADDRESS),
+  sendTransactionFunction: (gasPrice) =>
+    wallet.sendTransaction({ ...txOptions, gasPrice }),
   minGasPrice: ynatm.toGwei(1),
   maxGasPrice: ynatm.toGwei(20),
   gasPriceScalingFunction: ynatm.LINEAR(5), // Scales by 5 GWEI in gasPrice between each try
@@ -44,24 +46,23 @@ Since `ynatm` is framework agnostic, you can also use it for contract interactio
 const ynatm = require("ynatm");
 
 const nonce = provider.getTransactionCount(SENDER_ADDRESS);
+const options = {
+  from: SENDER_ADDRESS,
+  nonce,
+}
 
-const ethersSendContractFunction = (options) => {
-  const tx = MyContract.callFunction(params, options);
+const ethersSendContractFunction = (gasPrice) => {
+  const tx = MyContract.functionName(params, { ...options, gasPrice });
   const txRecp = await tx.wait(1); // wait for 1 confirmations
   return txRecp;
 };
 
-const web3SendContractFunction = (options) => {
+const web3SendContractFunction = (gasPrice) => {
   // Web3 by default waits for the receipt
-  return MyContract.methods.callFunction(params).send(options);
+  return MyContract.methods.functionName(params).send({ ...options, gasPrice });
 };
 
 const tx = await ynatm.send({
-  transaction: {
-    from: SENDER_ADDRESS,
-    nonce, // `getTransactionNonceFunction` is not required if nonce is specified here
-    gasLimit: 420000,
-  },
   sendTransactionFunction: ethersSendContractFunction, // or web3SendContractFunction
   minGasPrice: ynatm.toGwei(1),
   maxGasPrice: ynatm.toGwei(20),
@@ -103,14 +104,15 @@ const rejectOnTheseMessages = (err) => {
 
 const nonce = await provider.getTransactionCount(SENDER_ADDRESS);
 
-const tx = await ynatm.send({
-  transaction: {
-    from: SENDER_ADDRESS,
-    to: CONTRACT_ADDRESS,
-    data: IContract.encodeFunctionData("functionName", [params]),
-    nonce,
-  },
-  sendTransactionFunction: (tx) => wallet.sendTransaction(tx),
+const tx = {
+  from: SENDER_ADDRESS,
+  to: RECIPIENT_ADDRESS,
+  nonce,
+  data: '0x'
+}
+
+await ynatm.send({
+  sendTransactionFunction: (gasPrice) => wallet.sendTransaction({ ...tx, gasPrice }),
   minGasPrice: ynatm.toGwei(1),
   maxGasPrice: ynatm.toGwei(20),
   gasPriceScalingFunction: ynatm.LINEAR(5),
