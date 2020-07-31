@@ -42,9 +42,11 @@ test("simple override", async function () {
 
   // Send a bunch of transactions to override and overprice previous tx
   const { transactionHash } = await ynatm.send({
-    transaction,
-    sendTransactionFunction: (tx) =>
-      web3.eth.sendTransaction(tx, (err) => new Error(err)),
+    sendTransactionFunction: (gasPrice) =>
+      web3.eth.sendTransaction(
+        { ...transaction, gasPrice },
+        (err) => new Error(err)
+      ),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),
@@ -77,9 +79,10 @@ test("contract data override", async function () {
     .catch(() => {});
 
   await ynatm.send({
-    transaction: options,
-    sendTransactionFunction: (txOptions) =>
-      StateMachine.methods.setState(overrideState).send(txOptions),
+    sendTransactionFunction: (gasPrice) =>
+      StateMachine.methods
+        .setState(overrideState)
+        .send({ ...options, gasPrice }),
     minGasPrice: initialGasPrice + ynatm.toGwei(1),
     maxGasPrice: ynatm.toGwei(50),
     gasPriceScalingFunction: ynatm.LINEAR(1),

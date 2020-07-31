@@ -63,18 +63,10 @@ const rejectOnRevert = (e) => {
  * Gradually keeps trying a transaction with an incremental amount of gas
  * while keeping the same nonce.
  *
- * @param {Object} transaction:
- *   Object that should be passed to your supplied sendTransactionFunction.
- *   e.g. { from: address, to: address, gas: 21000, data: '0x' }
- * @param {Function} getTransactionNonceFunction:
- *   Function that returns a Promise that resolves to the latest nonce.
- *   Not needed if transaction.nonce is supplied
- *   e.g. () => provider.getTransactionCount(sender)
- *        () => web3.eth.getTransactionCount(sender)
  * @param {Function} sendTransactionFunction:
- *   Function that accepts a transaction object, sends it and returns a Promise that resolves to tx receipt
- *   e.g. (tx) => wallet.sendTranscation(tx)
- *        (tx) => web3.eth.sendTransaction(tx, {from: sender})
+ *   Function that accepts a gasPrice, and uses that gasPrice to send another tx
+ *   e.g. (gasPrice) => wallet.sendTranscation({ ...tx, gasPrice })
+ *        (gasPrice) => web3.eth.sendTransaction(tx, { from: sender, gasPrice })
  * @param {number} minGasPrice:
  *   Minimum gasPrice to start with
  * @param {number} masGasPrice:
@@ -87,9 +79,7 @@ const rejectOnRevert = (e) => {
  *   By default, it'll stop immediately stop if the error contains the string "revert"
  */
 const send = async ({
-  transaction,
   sendTransactionFunction,
-  getTransactionNonceFunction,
   minGasPrice,
   maxGasPrice,
   gasPriceScalingFunction = LINEAR(5),
@@ -106,31 +96,11 @@ const send = async ({
     maxGasPrice = parseInt(maxGasPrice);
   }
 
-  // Get nonce
-  let nonce = transaction.nonce;
-  if (nonce === undefined || nonce === null) {
-    if (!getTransactionNonceFunction) {
-      throw new Error(
-        "transaction.nonce and getTransactionNonceFunction is empty! Please supply at least one of the parameters."
-      );
-    }
-
-    nonce = await getTransactionNonceFunction();
-  }
-
   // List of varying gasPrices
   const gasPrices = getGasPriceVariations({
     minGasPrice,
     maxGasPrice,
     gasPriceScalingFunction,
-  });
-
-  const txs = gasPrices.map((gasPrice) => {
-    return {
-      ...transaction,
-      nonce,
-      gasPrice,
-    };
   });
 
   const promise = new Promise((resolve, reject) => {
@@ -141,15 +111,15 @@ const send = async ({
     // After waiting (N + 1) * delay seconds, throw an error
     const finalTimeoutId = setTimeout(() => {
       reject(new Error("Transaction taking too long!"));
-    }, (txs.length + 1) * delay);
+    }, (gasPrices.length + 1) * delay);
     timeoutIds.push(finalTimeoutId);
 
     // For each signed transactions
-    for (const [i, txData] of txs.entries()) {
+    for (const [i, gasPrice] of gasPrices.entries()) {
       // Async function to wait for transaction
       const waitForTx = async () => {
         try {
-          const tx = await sendTransactionFunction(txData);
+          const tx = await sendTransactionFunction(gasPrice);
 
           // Clear other timeouts
           for (const tid of timeoutIds) {
@@ -163,7 +133,7 @@ const send = async ({
           // Reject if either we have retried all possible gasPrices
           // Or if some condition is met
           if (
-            failedTxs.length >= txs.length ||
+            failedTxs.length >= gasPrices.length ||
             rejectImmediatelyOnCondition(e)
           ) {
             for (const tid of timeoutIds) {
