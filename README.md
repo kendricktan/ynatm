@@ -71,6 +71,19 @@ const tx = await ynatm.send({
 });
 ```
 
+### Custom `gasPriceScalingFunction`
+
+You can define your own `gasPriceScalingFunction`, which takes in a destructured object containing the following keys:
+- `x`: X'th number of try
+- `y`: Current gasPrice
+- `c`: Constant, `minGasPrice`
+
+```javascript
+const customGasScalingFunction = ({ x, y, c }) => {
+  return ...
+}
+```
+
 ### Immediate Error Handling with `rejectImmediatelyOnCondition`
 
 The expected behavior when the transaction manager hits an error is to:

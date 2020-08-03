@@ -5,20 +5,24 @@ const GWEI = Math.pow(10, 9);
 
 const toGwei = (x) => x * GWEI;
 
-const EXPONENTIAL = (base = 2, inGwei = true) => (x, tries = 0) => {
-  let p = Math.pow(base, tries);
+const EXPONENTIAL = (base = 2, inGwei = true) => ({ x }) => {
+  let p = Math.pow(base, x);
   if (inGwei) {
     p = toGwei(p);
   }
   return x + p;
 };
 
-const LINEAR = (slope = 1, inGwei = true) => (x, tries = 0) => {
-  let p = slope * tries;
+const LINEAR = (slope = 1, inGwei = true) => ({ x, c }) => {
+  let p = slope * x;
   if (inGwei) {
     p = toGwei(p);
   }
-  return x + p;
+  return c + p;
+};
+
+const DOUBLES = ({ y }) => {
+  return y * 2;
 };
 
 // Returns a list of gasPrices, based on the scaling function
@@ -48,7 +52,11 @@ const getGasPriceVariations = ({
   for (;;) {
     if (curGasPrice > maxGasPrice) break;
     gasPrices = gasPrices.concat(curGasPrice);
-    curGasPrice = gasPriceScalingFunction(minGasPrice, ++i);
+    curGasPrice = gasPriceScalingFunction({
+      y: curGasPrice,
+      x: ++i,
+      c: minGasPrice,
+    });
   }
 
   return gasPrices;
@@ -158,4 +166,5 @@ module.exports = {
   toGwei,
   EXPONENTIAL,
   LINEAR,
+  DOUBLES,
 };
