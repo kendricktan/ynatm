@@ -2,6 +2,7 @@ const Promise = require("bluebird");
 
 // GWEI = 1e9
 const GWEI = Math.pow(10, 9);
+const MAX_INT32 = ~(1 << 31)
 
 const toGwei = (x) => x * GWEI;
 
@@ -24,6 +25,20 @@ const LINEAR = (slope = 1, inGwei = true) => ({ x, c }) => {
 const DOUBLES = ({ y }) => {
   return y * 2;
 };
+
+// The default behaviour of an overflow of the timeout value
+// passed to `setTimeout` will result it being set to 1.
+const sanitizeTimeout = (timeout) => {
+  if (timeout > MAX_INT32) {
+    console.log(
+      `WARNING: Timeout larger than max supported timeout size.
+                    ${timeout} set to ${MAX_INT32}.
+          `
+    );
+    return MAX_INT32;
+  }
+  return timeout;
+}
 
 // Returns a list of gasPrices, based on the scaling function
 const getGasPriceVariations = ({
@@ -119,7 +134,7 @@ const send = async ({
     // After waiting (N + 1) * delay seconds, throw an error
     const finalTimeoutId = setTimeout(() => {
       reject(new Error("Transaction taking too long!"));
-    }, (gasPrices.length + 1) * delay);
+    }, sanitizeTimeout((gasPrices.length + 1) * delay));
     timeoutIds.push(finalTimeoutId);
 
     // For each signed transactions
@@ -153,7 +168,7 @@ const send = async ({
       };
 
       // Attempt to send the signed transaction after <x> delay
-      const timeoutId = setTimeout(waitForTx, i * delay);
+      const timeoutId = setTimeout(waitForTx, sanitizeTimeout(i * delay));
       timeoutIds.push(timeoutId);
     }
   });
